@@ -1,0 +1,6 @@
+outputs
+results
+detections
+__pycache__
+*.ipynb
+trackeval
