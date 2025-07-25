@@ -2,7 +2,8 @@ import numpy as np
 import textwrap
 from track_state import STATE_UNCONFIRMED, STATE_TRACKING, STATE_LOST, STATE_DELETED
 from utils import z_to_tlwh, z_to_tlbr, tlbr_to_z, tlbr_to_tlwh
-from filterpy.kalman import KalmanFilter
+# from filterpy.kalman import KalmanFilter
+from kalman_filter import KALMAN_FILTER
 
 class Track:
     @staticmethod
@@ -62,11 +63,11 @@ class Track:
 
     @property
     def tlwh(self):
-        return z_to_tlwh(np.array(self.kf.x).reshape(-1))
+        return z_to_tlwh(np.array(self.mean))
 
     @property
     def tlbr(self):
-        return z_to_tlbr(np.array(self.kf.x).reshape(-1))
+        return z_to_tlbr(np.array(self.mean))
     
     @property
     def valid(self):
@@ -88,7 +89,7 @@ class Track:
         else:
             self.state = state
         self.last_state = None
-        self.init_kalman_filter(bbox)
+        self.mean, self.covariance = KALMAN_FILTER.initiate(tlbr_to_z(bbox))
         self.predict_history = []
         self.update_history = [self.tlwh]
         self.scores = [float(score)]
@@ -102,21 +103,9 @@ class Track:
     def __str__(self):
         return self.clean_format
 
-    def init_kalman_filter(self, bbox:np.ndarray) -> KalmanFilter:
-        self.kf = KalmanFilter(dim_x=7, dim_z=4)
-        self.kf.F = np.array([[1,0,0,0,1,0,0],[0,1,0,0,0,1,0],[0,0,1,0,0,0,0],[0,0,0,1,0,0,1],[0,0,0,0,1,0,0],[0,0,0,0,0,1,0],[0,0,0,0,0,0,1]])
-        # self.kf.F = np.array([[1,0,0,0,1,0,0],[0,1,0,0,0,1,0],[0,0,1,0,0,0,1],[0,0,0,1,0,0,0],[0,0,0,0,1,0,0],[0,0,0,0,0,1,0],[0,0,0,0,0,0,1]])
-        self.kf.H = np.array([[1,0,0,0,0,0,0],[0,1,0,0,0,0,0],[0,0,1,0,0,0,0],[0,0,0,1,0,0,0]])
-        self.kf.R[2:,2:] *= 10
-        self.kf.P[4:,4:] *= 1000
-        self.kf.P *= 10.
-        self.kf.Q[-1,-1] *= 0.01
-        self.kf.Q[4:,4:] *= 0.01
-        self.kf.x[:4] = tlbr_to_z(bbox).reshape(-1, 1)
-
     def predict(self):
         self.age += 1
-        self.kf.predict()
+        self.mean, self.covariance = KALMAN_FILTER.predict(self.mean, self.covariance)
         if not self.valid:
             self.last_state = self.state
             self.state = STATE_DELETED
@@ -127,7 +116,7 @@ class Track:
             self.state = STATE_LOST
             
     def update(self, bbox, score):
-        self.kf.update(tlbr_to_z(bbox))
+        self.mean, self.covariance = KALMAN_FILTER.update(self.mean, self.covariance, tlbr_to_z(bbox))
         self.update_history.append(tlbr_to_tlwh(bbox))
         self.scores.append(float(score))
         self.age = 0

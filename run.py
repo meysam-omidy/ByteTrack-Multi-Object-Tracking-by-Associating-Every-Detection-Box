@@ -8,7 +8,7 @@ from utils import count_time
 
 @count_time
 def run():
-    seqs = ['MOT17-02-FRCNN']
+    seqs = ['MOT17-04-FRCNN']
 
     os.makedirs('outputs/bytetrack-self', exist_ok=True)
 
