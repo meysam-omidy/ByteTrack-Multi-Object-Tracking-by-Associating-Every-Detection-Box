@@ -8,7 +8,8 @@ from utils import count_time
 
 @count_time
 def run():
-    seqs = ['MOT17-02-FRCNN']
+    seqs = ['MOT17-02-FRCNN', 'MOT17-04-FRCNN', 'MOT17-05-FRCNN', 'MOT17-09-FRCNN', 'MOT17-10-FRCNN', 'MOT17-11-FRCNN', 'MOT17-13-FRCNN', ]
+
 
     os.makedirs('outputs/bytetrack-self', exist_ok=True)
 
@@ -36,13 +37,6 @@ def run():
             #     break
         file.close()
     seqmap.close()
-
-    print(f'frame time -> {round(tracker.frame_time * 1000, 1)}ms')
-    print(f'phase1 time -> {round(tracker.phase1_time * 1000, 1)}ms')
-    print(f'phase2 time -> {round(tracker.phase2_time * 1000, 1)}ms')
-    print(f'phase3 time -> {round(tracker.phase3_time * 1000, 1)}ms')
-    print(f'phase4 time -> {round(tracker.phase4_time * 1000, 1)}ms')
-    print(f'phase5 time -> {round(tracker.phase5_time * 1000, 1)}ms')
 
 
 
