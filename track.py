@@ -9,7 +9,7 @@ class Track:
     @staticmethod
     def init(max_age, min_box_area, max_aspect_ratio):
         Track.INSTANCES = []
-        Track.ID_COUNTER = 0
+        Track.ID_COUNTER = 1
         Track.FRAME_NUMBER = 0
         Track.MAX_AGE = max_age
         Track.MIN_BOX_AREA = min_box_area
@@ -19,6 +19,7 @@ class Track:
         Track.CONFIRMED_TRACKS:list['Track'] = []
         Track.UNCONFIRMED_TRACKS:list['Track'] = []
         Track.TRACKING_TRACKS:list['Track'] = []
+        Track.LOST_TRACKS:list['Track'] = []
 
     @staticmethod
     def predict_all() -> None:
@@ -26,11 +27,15 @@ class Track:
         for track in Track.INSTANCES:
             if track.state not in [STATE_DELETED]:
                 track.predict()
+    
+    @staticmethod
+    def output_tracks():
         Track.ALIVE_TRACKS = [track for track in Track.INSTANCES if track.state not in [STATE_DELETED]]
         Track.DELETED_TRACKS = [track for track in Track.INSTANCES if track.state in [STATE_DELETED]]
         Track.CONFIRMED_TRACKS = [track for track in Track.INSTANCES if track.state in [STATE_TRACKING, STATE_LOST]]
         Track.UNCONFIRMED_TRACKS = [track for track in Track.INSTANCES if track.state in [STATE_UNCONFIRMED]]
         Track.TRACKING_TRACKS = [track for track in Track.INSTANCES if track.state in [STATE_TRACKING]]
+        Track.LOST_TRACKS = [track for track in Track.INSTANCES if track.state in [STATE_LOST]]
     
     @property
     def mot_format(self):
@@ -57,7 +62,8 @@ class Track:
     @property
     def score(self):
         if len(self.scores) > 0:
-            return float(np.mean(self.scores))
+            # return float(np.mean(self.scores))
+            return self.scores[-1]
         else:
             return 0
 
@@ -105,7 +111,10 @@ class Track:
 
     def predict(self):
         self.age += 1
-        self.mean, self.covariance = KALMAN_FILTER.predict(self.mean, self.covariance)
+        mean = self.mean
+        if self.state != STATE_TRACKING:
+            mean[7] = 0
+        self.mean, self.covariance = KALMAN_FILTER.predict(mean, self.covariance)
         if not self.valid:
             self.last_state = self.state
             self.state = STATE_DELETED

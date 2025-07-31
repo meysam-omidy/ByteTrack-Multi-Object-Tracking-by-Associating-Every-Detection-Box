@@ -4,3 +4,4 @@ detections
 __pycache__
 *.ipynb
 trackeval
+*.log
