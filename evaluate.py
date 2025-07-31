@@ -5,7 +5,7 @@ import os
 
 @count_time
 def evaluate():
-    trackers_to_eval = 'bytetrack'
+    trackers_to_eval = 'bytetrack-self'
     dataset = 'MOT17'
 
     eval_config = {'USE_PARALLEL': True,

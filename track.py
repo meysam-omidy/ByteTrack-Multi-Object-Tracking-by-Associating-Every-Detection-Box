@@ -25,6 +25,9 @@ class Track:
         for track in Track.INSTANCES:
             if track.state not in [STATE_DELETED]:
                 track.predict()
+
+    @staticmethod 
+    def output_tracks():
         Track.ALIVE_TRACKS = [track for track in Track.INSTANCES if track.state not in [STATE_DELETED]]
         Track.DELETED_TRACKS = [track for track in Track.INSTANCES if track.state in [STATE_DELETED]]
         Track.CONFIRMED_TRACKS = [track for track in Track.INSTANCES if track.state in [STATE_TRACKING, STATE_LOST]]
@@ -93,7 +96,7 @@ class Track:
         self.update_history = [self.tlwh]
         self.scores = [float(score)]
         self.age = 0
-        self.entered_frame = Track.FRAME_NUMBER + 1
+        self.entered_frame = Track.FRAME_NUMBER
         self.exited_frame = -1
         self.id = Track.ID_COUNTER
         Track.ID_COUNTER += 1
